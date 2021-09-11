@@ -27,27 +27,37 @@ def write_image(path, img):
             f.write(f'{r} {g} {b} ')
 
 
-def solve_puzzle(tiles_folder):
-    # create placeholder for result image
-    # read all tiles in list
-    tiles = [read_image(os.path.join(tiles_folder, t)) for t in sorted(os.listdir(tiles_folder))]
-    result_img = np.zeros((H, W, CHANNEL_NUM), dtype=np.uint8)
-    # scan dimensions of all tiles and find minimal height and width
-    dims = np.array([t.shape[:2] for t in tiles])
-    h, w = np.min(dims, axis=0)
-    # compute grid that will cover image
-    # spacing between grid rows = min h
-    # spacing between grid columns = min w
-    x_nodes = np.arange(0, W, w)
-    y_nodes = np.arange(0, H, h)
-    xx, yy = np.meshgrid(x_nodes, y_nodes)
-    nodes = np.vstack((xx.flatten(), yy.flatten())).T
-    # fill grid with tiles
-    for (x, y), tile in zip(nodes, tiles):
-        result_img[y: y + h, x: x + w] = tile[:h, :w]
+# def solve_puzzle(tiles_folder):
+#     # create placeholder for result image
+#     # read all tiles in list
+#     tiles = [read_image(os.path.join(tiles_folder, t)) for t in sorted(os.listdir(tiles_folder))]
+#     result_img = np.zeros((H, W, CHANNEL_NUM), dtype=np.uint8)
+#     # scan dimensions of all tiles and find minimal height and width
+#     dims = np.array([t.shape[:2] for t in tiles])
+#     h, w = np.min(dims, axis=0)
+#     # compute grid that will cover image
+#     # spacing between grid rows = min h
+#     # spacing between grid columns = min w
+#     x_nodes = np.arange(0, W, w)
+#     y_nodes = np.arange(0, H, h)
+#     xx, yy = np.meshgrid(x_nodes, y_nodes)
+#     nodes = np.vstack((xx.flatten(), yy.flatten())).T
+#     # fill grid with tiles
+#     for (x, y), tile in zip(nodes, tiles):
+#         result_img[y: y + h, x: x + w] = tile[:h, :w]
+#
+#     output_path = "image.ppm"
+#     write_image(output_path, result_img)
 
-    output_path = "image.ppm"
-    write_image(output_path, result_img)
+
+def solve_puzzle(tiles_folder):
+    tiles = [read_image(os.path.join(tiles_folder, t)) for t in sorted(os.listdir(tiles_folder))]
+    tiles_counts = len(tiles)
+    while tiles_counts != 1:
+        tile_num = 0
+        while tile_num < tiles_counts:
+            for i in range(4):
+                for j in range(4):
 
 
 
