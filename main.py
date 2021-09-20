@@ -33,9 +33,9 @@ def read_image(path):
 
 
 def find_dest(chosen_pixel, compare_pixel):
-    division_pixel = math.sqrt((int(chosen_pixel[0]) - int(compare_pixel[0]))**2 +
-                               (int(chosen_pixel[1]) - int(compare_pixel[1]))**2 +
-                               (int(chosen_pixel[2]) - int(compare_pixel[2]))**2)
+    division_pixel = ((float(compare_pixel[0]) - float(chosen_pixel[0]))**2 +
+                      (float(compare_pixel[1]) - float(chosen_pixel[1]))**2 +
+                      (float(compare_pixel[2]) - float(chosen_pixel[2]))**2) ** 0.5
     return division_pixel
 
 
@@ -55,28 +55,155 @@ def find_neighbours(path):
     tiles_counts = len(tiles)
     tile_mathches = []
     h, w = tiles[0].shape[:2]
+    tiles_sides = [
+                   {"x1": [w-1], "y1": [i for i in range(h)],
+                    "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(0), CompareSide(0)]},
+                   {"x1": [w-1], "y1": [i for i in range(h)],
+                    "x2": [i for i in range(w)], "y2": [h-1], "sides": [ChosenSide(0), CompareSide(1)]},
+                   {"x1": [w-1], "y1": [i for i in range(h)],
+                    "x2": [w-1], "y2": [i for i in range(h-1, 0, -1)], "sides": [ChosenSide(0), CompareSide(2)]},
+                   {"x1": [w-1], "y1": [i for i in range(h)],
+                    "x2": [i for i in range(w-1, 0, -1)], "y2": [0], "sides": [ChosenSide(0), CompareSide(3)]},
+
+                   {"x1": [i for i in range(w)], "y1": [0],
+                    "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(1), CompareSide(0)]},
+                   {"x1": [i for i in range(w)], "y1": [0],
+                    "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(1), CompareSide(1)]},
+                   {"x1": [i for i in range(w)], "y1": [0],
+                    "x2": [w - 1], "y2": [i for i in range(h-1, 0, -1)], "sides": [ChosenSide(1), CompareSide(2)]},
+                   {"x1": [i for i in range(w)], "y1": [0],
+                    "x2": [i for i in range(w-1, 0, -1)], "y2": [0], "sides": [ChosenSide(1), CompareSide(3)]},
+
+                   {"x1": [0], "y1": [i for i in range(h-1, 0, -1)],
+                    "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(2), CompareSide(0)]},
+                   {"x1": [0], "y1": [i for i in range(h-1, 0, -1)],
+                    "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(2), CompareSide(1)]},
+                   {"x1": [0], "y1": [i for i in range(h-1, 0, -1)],
+                    "x2": [w - 1], "y2": [i for i in range(h-1, 0, -1)], "sides": [ChosenSide(2), CompareSide(2)]},
+                   {"x1": [0], "y1": [i for i in range(h-1, 0, -1)],
+                    "x2": [i for i in range(w-1, 0, -1)], "y2": [0], "sides": [ChosenSide(2), CompareSide(3)]},
+
+                   {"x1": [i for i in range(w-1, 0, -1)], "y1": [h - 1],
+                    "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(3), CompareSide(0)]},
+                   {"x1": [i for i in range(w-1, 0, -1)], "y1": [h - 1],
+                    "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(3), CompareSide(1)]},
+                   {"x1": [i for i in range(w-1, 0, -1)], "y1": [h - 1],
+                    "x2": [w - 1], "y2": [i for i in range(h-1, 0, -1)], "sides": [ChosenSide(3), CompareSide(2)]},
+                   {"x1": [i for i in range(w-1, 0, -1)], "y1": [h - 1],
+                    "x2": [i for i in range(w-1, 0, -1)], "y2": [0], "sides": [ChosenSide(3), CompareSide(3)]},
+                   ]
     for chosen_tile_index in range(tiles_counts):
         for compare_tile_index in range(tiles_counts):
             if chosen_tile_index == compare_tile_index:
                 continue
-            for side_chosen_tile in range(4):
-                for side_compare_tile in range(4):
-                    division_pixel = 0
-                    x = tiles[chosen_tile_index].shape[1] - 1
-                    for y in range(tiles[chosen_tile_index].shape[0]):
-                        division_pixel += find_dest(tiles[chosen_tile_index][y][x], tiles[compare_tile_index][y][0])
-                    avg_division_pixel = division_pixel / (3 * tiles[chosen_tile_index].shape[0] - 1)
-                    if avg_division_pixel < 15:
-                        tile_mathches.append({"compare tiles": [chosen_tile_index, compare_tile_index],
-                                              "sides": [ChosenSide(side_chosen_tile), CompareSide(side_compare_tile)]})
-                    tiles[compare_tile_index] = np.rot90(tiles[compare_tile_index])
-                    # if side_compare_tile == 3:
-                    #     tiles[compare_tile_index] = np.rot90(tiles[compare_tile_index])
-                tiles[side_chosen_tile] = np.rot90(tiles[side_chosen_tile])
+            is_continue = True
+            for j in range(len(tile_mathches)):
+                if [compare_tile_index, chosen_tile_index] == tile_mathches[j][0]:
+                    is_continue = False
+            if not is_continue:
+                continue
+
+            for i in range(len(tiles_sides)):
+                chosen_tile_x = tiles_sides[i]["x1"]
+                chosen_tile_y = tiles_sides[i]["y1"]
+                compare_tile_x = tiles_sides[i]["x2"]
+                compare_tile_y = tiles_sides[i]["y2"]
+                chosen_tile_x_index = 0
+                chosen_tile_y_index = 0
+                compare_tile_x_index = 0
+                compare_tile_y_index = 0
+                division_pixel = 0
+                while chosen_tile_y_index < len(chosen_tile_y)-1 or compare_tile_y_index < len(compare_tile_y)-1 \
+                        or chosen_tile_x_index < len(chosen_tile_x)-1 or compare_tile_x_index < len(compare_tile_x)-1:
+                    division_pixel += find_dest(tiles[chosen_tile_index][chosen_tile_y[chosen_tile_y_index]]
+                                                     [chosen_tile_x[chosen_tile_x_index]],
+                                                tiles[compare_tile_index][compare_tile_y[compare_tile_y_index]]
+                                                     [compare_tile_x[compare_tile_x_index]])
+
+                    if chosen_tile_y_index < len(chosen_tile_y)-1:
+                        chosen_tile_y_index += 1
+                    if compare_tile_y_index < len(compare_tile_y)-1:
+                        compare_tile_y_index += 1
+                    if chosen_tile_x_index < len(chosen_tile_x)-1:
+                        chosen_tile_x_index += 1
+                    if compare_tile_x_index < len(compare_tile_x)-1:
+                        compare_tile_x_index += 1
+                avg_division_pixel = division_pixel / (h)
+                if avg_division_pixel < 60:
+                    tile_mathches.append([[chosen_tile_index, compare_tile_index], {"sides": tiles_sides[i]["sides"]}])
+                    break
+
     return tile_mathches
 
 
 if __name__ == "__main__":
-    tes = find_neighbours("G:\\PycharmProjects\\data\\data\\0000_0000_0000\\tiles")
-    for i in range(len(tes)):
-        print(tes[0])
+    for i in find_neighbours("G:\\PycharmProjects\\data\\data\\0000_0000_0000\\tiles"):
+        print(i)
+    # img1 = np.rot90(img1)
+    # img2 = read_image("G:\\PycharmProjects\\data\\data\\0000_0000_0000\\tiles\\0006.ppm")
+    # h, w = img1.shape[:2]
+    # tiles_sides = [
+    #     {"x1": [w - 1], "y1": [i for i in range(h)],
+    #      "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(0), CompareSide(0)]},
+    #     {"x1": [w - 1], "y1": [i for i in range(h)],
+    #      "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(0), CompareSide(1)]},
+    #     {"x1": [w - 1], "y1": [i for i in range(h)],
+    #      "x2": [w - 1], "y2": [i for i in range(h - 1, 0, -1)], "sides": [ChosenSide(0), CompareSide(2)]},
+    #     {"x1": [w - 1], "y1": [i for i in range(h)],
+    #      "x2": [i for i in range(w - 1, 0, -1)], "y2": [0], "sides": [ChosenSide(0), CompareSide(3)]},
+    #
+    #     {"x1": [i for i in range(w)], "y1": [0],
+    #      "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(1), CompareSide(0)]},
+    #     {"x1": [i for i in range(w)], "y1": [0],
+    #      "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(1), CompareSide(1)]},
+    #     {"x1": [i for i in range(w)], "y1": [0],
+    #      "x2": [w - 1], "y2": [i for i in range(h - 1, 0, -1)], "sides": [ChosenSide(1), CompareSide(2)]},
+    #     {"x1": [i for i in range(w)], "y1": [0],
+    #      "x2": [i for i in range(w - 1, 0, -1)], "y2": [0], "sides": [ChosenSide(1), CompareSide(3)]},
+    #
+    #     {"x1": [0], "y1": [i for i in range(h - 1, 0, -1)],
+    #      "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(2), CompareSide(0)]},
+    #     {"x1": [0], "y1": [i for i in range(h - 1, 0, -1)],
+    #      "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(2), CompareSide(1)]},
+    #     {"x1": [0], "y1": [i for i in range(h - 1, 0, -1)],
+    #      "x2": [w - 1], "y2": [i for i in range(h - 1, 0, -1)], "sides": [ChosenSide(2), CompareSide(2)]},
+    #     {"x1": [0], "y1": [i for i in range(h - 1, 0, -1)],
+    #      "x2": [i for i in range(w - 1, 0, -1)], "y2": [0], "sides": [ChosenSide(2), CompareSide(3)]},
+    #
+    #     {"x1": [i for i in range(w - 1, 0, -1)], "y1": [h - 1],
+    #      "x2": [0], "y2": [i for i in range(h)], "sides": [ChosenSide(3), CompareSide(0)]},
+    #     {"x1": [i for i in range(w - 1, 0, -1)], "y1": [h - 1],
+    #      "x2": [i for i in range(w)], "y2": [h - 1], "sides": [ChosenSide(3), CompareSide(1)]},
+    #     {"x1": [i for i in range(w - 1, 0, -1)], "y1": [h - 1],
+    #      "x2": [w - 1], "y2": [i for i in range(h - 1, 0, -1)], "sides": [ChosenSide(3), CompareSide(2)]},
+    #     {"x1": [i for i in range(w - 1, 0, -1)], "y1": [h - 1],
+    #      "x2": [i for i in range(w - 1, 0, -1)], "y2": [0], "sides": [ChosenSide(3), CompareSide(3)]},
+    # ]
+    #
+    # chosen_tile_x = tiles_sides[0]["x1"]
+    # chosen_tile_y = tiles_sides[0]["y1"]
+    # compare_tile_x = tiles_sides[0]["x2"]
+    # compare_tile_y = tiles_sides[0]["y2"]
+    # chosen_tile_x_index = 0
+    # chosen_tile_y_index = 0
+    # compare_tile_x_index = 0
+    # compare_tile_y_index = 0
+    # division_pixel = 0
+    # while chosen_tile_y_index < len(chosen_tile_y) - 1 or compare_tile_y_index < len(compare_tile_y) - 1 \
+    #         or chosen_tile_x_index < len(chosen_tile_x) - 1 or compare_tile_x_index < len(compare_tile_x) - 1:
+    #     division_pixel += find_dest(img1[chosen_tile_y[chosen_tile_y_index]]
+    #                                 [chosen_tile_x[chosen_tile_x_index]],
+    #                                 img2[compare_tile_y[compare_tile_y_index]]
+    #                                 [compare_tile_x[compare_tile_x_index]])
+    #
+    #     if chosen_tile_y_index < len(chosen_tile_y) - 1:
+    #         chosen_tile_y_index += 1
+    #     if compare_tile_y_index < len(compare_tile_y) - 1:
+    #         compare_tile_y_index += 1
+    #     if chosen_tile_x_index < len(chosen_tile_x) - 1:
+    #         chosen_tile_x_index += 1
+    #     if compare_tile_x_index < len(compare_tile_x) - 1:
+    #         compare_tile_x_index += 1
+    # avg_division_pixel = division_pixel / (h)
+    # print(avg_division_pixel)
+
