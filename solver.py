@@ -215,7 +215,6 @@ def find_neighbours(path):
                     min_neighbour = tile_neighbour
             tile_mathches.append([[chosen_tile_index, min_neighbour[0][0]], {"sides": min_neighbour[1]["sides"]},
                                   {"avg_dest": min_neighbour[1]["avg_dest"]}])
-    print("Done")
     return tile_mathches
 
 
@@ -439,7 +438,6 @@ def tile_concat(tile_matches, tiles_count):
                         break
                 if is_find_chosen:
                     break
-    print("Done")
     return tiles
 
 
@@ -491,5 +489,4 @@ def solve_puzzle(tiles_folder):
 
 
 if __name__ == "__main__":
-    # print(tile_concat(find_neighbours("G:\\PycharmProjects\\data\\data\\0000_0000_0000\\tiles")))
-    solve_puzzle("G:\\PycharmProjects\\data\\data\\0000_0001_0000\\tiles")
+    solve_puzzle(sys.argv[1])
