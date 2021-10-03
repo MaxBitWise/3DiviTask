@@ -250,180 +250,182 @@ def tile_concat(tile_matches, tiles_count):
                         for z in range(tiles.shape[1]):
                             if tiles[k][z][0] == tile_matches[tile_match_index][0][1]:
                                 is_find_compare = True
-                                if tile_matches[tile_match_index][0][1] in concat_tiles:
-                                    tmp = tile_matches[tile_match_index][0][0]
-                                    tile_matches[tile_match_index][0][0] = tile_matches[tile_match_index][0][1]
-                                    tile_matches[tile_match_index][0][1] = tmp
-                                    tmp = tile_matches[tile_match_index][1]["sides"][0].name
-                                    tile_matches[tile_match_index][1]["sides"][0] = \
-                                        ChosenSide[tile_matches[tile_match_index][1]["sides"][1].name]
-                                    tile_matches[tile_match_index][1]["sides"][1] = CompareSide[tmp]
-                                    tmp = i
-                                    i = k
-                                    k = tmp
-                                    tmp = j
-                                    j = z
-                                    z = tmp
+                                if (tile_matches[tile_match_index][0][0] not in concat_tiles or
+                                    tile_matches[tile_match_index][0][1] not in concat_tiles):
+                                    if tile_matches[tile_match_index][0][1] in concat_tiles:
+                                        tmp = tile_matches[tile_match_index][0][0]
+                                        tile_matches[tile_match_index][0][0] = tile_matches[tile_match_index][0][1]
+                                        tile_matches[tile_match_index][0][1] = tmp
+                                        tmp = tile_matches[tile_match_index][1]["sides"][0].name
+                                        tile_matches[tile_match_index][1]["sides"][0] = \
+                                            ChosenSide[tile_matches[tile_match_index][1]["sides"][1].name]
+                                        tile_matches[tile_match_index][1]["sides"][1] = CompareSide[tmp]
+                                        tmp = i
+                                        i = k
+                                        k = tmp
+                                        tmp = j
+                                        j = z
+                                        z = tmp
 
-                                side = (tile_matches[tile_match_index][1]["sides"][0].value + tiles[i][j][1]) % 4
-                                is_rotate = False
-                                if (ChosenSide(side) == ChosenSide.DOWN and i == tiles.shape[0]-1) \
-                                        or (ChosenSide(side) == ChosenSide.UP and i == 0):
-                                    if j <= tiles.shape[0]-1:
-                                        high_column = False
-                                        for x in range(tiles.shape[0]):
-                                            is_column_concat = True
-                                            for y in range(tiles.shape[0]):
-                                                if tiles[y][x][0] not in concat_tiles:
-                                                    is_column_concat = False
-                                            if is_column_concat:
-                                                high_column = True
-                                                break
-                                        if high_column:
-                                            is_rotate = True
+                                    side = (tile_matches[tile_match_index][1]["sides"][0].value + tiles[i][j][1]) % 4
+                                    is_rotate = False
+                                    if (ChosenSide(side) == ChosenSide.DOWN and i == tiles.shape[0]-1) \
+                                            or (ChosenSide(side) == ChosenSide.UP and i == 0):
+                                        if j <= tiles.shape[0]-1:
+                                            high_column = False
                                             for x in range(tiles.shape[0]):
+                                                is_column_concat = True
                                                 for y in range(tiles.shape[0]):
-                                                    tiles[y][x][1] += 1
-                                                    if tiles[y][x][1] == 4:
-                                                        tiles[y][x][1] = 0
-                                            rotate_square = np.copy(tiles[:, :tiles.shape[0], :])
-                                            rotate_square = np.rot90(rotate_square)
-                                            tiles[:, :tiles.shape[0], :] = np.copy(rotate_square)
-                                    else:
-                                        high_column = False
-                                        for x in range(tiles.shape[1]-tiles.shape[0], tiles.shape[1]):
-                                            is_column_concat = True
-                                            for y in range(tiles.shape[0]):
-                                                if tiles[y][x][0] not in concat_tiles:
-                                                    is_column_concat = False
-                                            if is_column_concat:
-                                                high_column = True
-                                                break
-                                        if high_column:
-                                            is_rotate = True
+                                                    if tiles[y][x][0] not in concat_tiles:
+                                                        is_column_concat = False
+                                                if is_column_concat:
+                                                    high_column = True
+                                                    break
+                                            if high_column:
+                                                is_rotate = True
+                                                for x in range(tiles.shape[0]):
+                                                    for y in range(tiles.shape[0]):
+                                                        tiles[y][x][1] += 1
+                                                        if tiles[y][x][1] == 4:
+                                                            tiles[y][x][1] = 0
+                                                rotate_square = np.copy(tiles[:, :tiles.shape[0], :])
+                                                rotate_square = np.rot90(rotate_square)
+                                                tiles[:, :tiles.shape[0], :] = np.copy(rotate_square)
+                                        else:
+                                            high_column = False
                                             for x in range(tiles.shape[1]-tiles.shape[0], tiles.shape[1]):
+                                                is_column_concat = True
                                                 for y in range(tiles.shape[0]):
-                                                    tiles[y][x][1] += 1
-                                                    if tiles[y][x][1] == 4:
-                                                        tiles[y][x][1] = 0
-                                            rotate_square = np.copy(tiles[:, tiles.shape[1]-tiles.shape[0]:, :])
-                                            rotate_square = np.rot90(rotate_square)
-                                            tiles[:, tiles.shape[1]-tiles.shape[0]:, :] = np.copy(rotate_square)
-                                if is_rotate:
-                                    break
-                                if tile_matches[tile_match_index][0][0] not in concat_tiles:
-                                    concat_tiles.append(tile_matches[tile_match_index][0][0])
-                                if tile_matches[tile_match_index][0][1] not in concat_tiles:
-                                    concat_tiles.append(tile_matches[tile_match_index][0][1])
-                                if ChosenSide(side) == ChosenSide.RIGHT:
-                                    if j < tiles.shape[1]-1:
-                                        tmp = np.copy(tiles[i][j+1])
-                                        tiles[i][j+1] = np.copy(tiles[k][z])
-                                        tiles[k][z] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i][j + 1][1] = rotates
-                                    else:
-                                        tiles = shift_left(tiles)
-                                        tmp = np.copy(tiles[i][j])
-                                        if z-1 >= 0:
-                                            tiles[i][j] = np.copy(tiles[k][z-1])
-                                            tiles[k][z-1] = np.copy(tmp)
+                                                    if tiles[y][x][0] not in concat_tiles:
+                                                        is_column_concat = False
+                                                if is_column_concat:
+                                                    high_column = True
+                                                    break
+                                            if high_column:
+                                                is_rotate = True
+                                                for x in range(tiles.shape[1]-tiles.shape[0], tiles.shape[1]):
+                                                    for y in range(tiles.shape[0]):
+                                                        tiles[y][x][1] += 1
+                                                        if tiles[y][x][1] == 4:
+                                                            tiles[y][x][1] = 0
+                                                rotate_square = np.copy(tiles[:, tiles.shape[1]-tiles.shape[0]:, :])
+                                                rotate_square = np.rot90(rotate_square)
+                                                tiles[:, tiles.shape[1]-tiles.shape[0]:, :] = np.copy(rotate_square)
+                                    if is_rotate:
+                                        break
+                                    if tile_matches[tile_match_index][0][0] not in concat_tiles:
+                                        concat_tiles.append(tile_matches[tile_match_index][0][0])
+                                    if tile_matches[tile_match_index][0][1] not in concat_tiles:
+                                        concat_tiles.append(tile_matches[tile_match_index][0][1])
+                                    if ChosenSide(side) == ChosenSide.RIGHT:
+                                        if j < tiles.shape[1]-1:
+                                            tmp = np.copy(tiles[i][j+1])
+                                            tiles[i][j+1] = np.copy(tiles[k][z])
+                                            tiles[k][z] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i][j + 1][1] = rotates
                                         else:
-                                            tiles[i][j] = np.copy(tiles[k][tiles.shape[1]-1])
-                                            tiles[k][tiles.shape[1]-1] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i][j][1] = rotates
-                                if ChosenSide(side) == ChosenSide.LEFT:
-                                    if j > 0:
-                                        tmp = np.copy(tiles[i][j-1])
-                                        tiles[i][j-1] = np.copy(tiles[k][z])
-                                        tiles[k][z] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i][j-1][1] = rotates
-                                    else:
-                                        tiles = shift_right(tiles)
-                                        tmp = np.copy(tiles[i][j])
-                                        if z+1 <= tiles.shape[1]-1:
-                                            tiles[i][j] = np.copy(tiles[k][z+1])
-                                            tiles[k][z+1] = np.copy(tmp)
+                                            tiles = shift_left(tiles)
+                                            tmp = np.copy(tiles[i][j])
+                                            if z-1 >= 0:
+                                                tiles[i][j] = np.copy(tiles[k][z-1])
+                                                tiles[k][z-1] = np.copy(tmp)
+                                            else:
+                                                tiles[i][j] = np.copy(tiles[k][tiles.shape[1]-1])
+                                                tiles[k][tiles.shape[1]-1] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i][j][1] = rotates
+                                    if ChosenSide(side) == ChosenSide.LEFT:
+                                        if j > 0:
+                                            tmp = np.copy(tiles[i][j-1])
+                                            tiles[i][j-1] = np.copy(tiles[k][z])
+                                            tiles[k][z] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i][j-1][1] = rotates
                                         else:
-                                            tiles[i][j] = np.copy(tiles[k][0])
-                                            tiles[k][0] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i][j][1] = rotates
-                                if ChosenSide(side) == ChosenSide.UP:
-                                    if i > 0:
-                                        tmp = np.copy(tiles[i-1][j])
-                                        tiles[i-1][j] = np.copy(tiles[k][z])
-                                        tiles[k][z] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i-1][j][1] = rotates
-                                    else:
-                                        tiles = shift_down(tiles)
-                                        tmp = np.copy(tiles[i][j])
-                                        if k+1 <= tiles.shape[0]-1:
-                                            tiles[i][j] = np.copy(tiles[k+1][z])
-                                            tiles[k+1][z] = np.copy(tmp)
+                                            tiles = shift_right(tiles)
+                                            tmp = np.copy(tiles[i][j])
+                                            if z+1 <= tiles.shape[1]-1:
+                                                tiles[i][j] = np.copy(tiles[k][z+1])
+                                                tiles[k][z+1] = np.copy(tmp)
+                                            else:
+                                                tiles[i][j] = np.copy(tiles[k][0])
+                                                tiles[k][0] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i][j][1] = rotates
+                                    if ChosenSide(side) == ChosenSide.UP:
+                                        if i > 0:
+                                            tmp = np.copy(tiles[i-1][j])
+                                            tiles[i-1][j] = np.copy(tiles[k][z])
+                                            tiles[k][z] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i-1][j][1] = rotates
                                         else:
-                                            tiles[i][j] = np.copy(tiles[0][z])
-                                            tiles[0][z] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i][j][1] = rotates
-                                if ChosenSide(side) == ChosenSide.DOWN:
-                                    if i < tiles.shape[0]-1:
-                                        tmp = np.copy(tiles[i+1][j])
-                                        tiles[i+1][j] = np.copy(tiles[k][z])
-                                        tiles[k][z] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i+1][j][1] = rotates
-                                    else:
-                                        tiles = shift_up(tiles)
-                                        tmp = np.copy(tiles[i][j])
-                                        if k-1 >= 0:
-                                            tiles[i][j] = np.copy(tiles[k-1][z])
-                                            tiles[k-1][z] = np.copy(tmp)
+                                            tiles = shift_down(tiles)
+                                            tmp = np.copy(tiles[i][j])
+                                            if k+1 <= tiles.shape[0]-1:
+                                                tiles[i][j] = np.copy(tiles[k+1][z])
+                                                tiles[k+1][z] = np.copy(tmp)
+                                            else:
+                                                tiles[i][j] = np.copy(tiles[0][z])
+                                                tiles[0][z] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i][j][1] = rotates
+                                    if ChosenSide(side) == ChosenSide.DOWN:
+                                        if i < tiles.shape[0]-1:
+                                            tmp = np.copy(tiles[i+1][j])
+                                            tiles[i+1][j] = np.copy(tiles[k][z])
+                                            tiles[k][z] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i+1][j][1] = rotates
                                         else:
-                                            tiles[i][j] = np.copy(tiles[tiles.shape[0]-1][z])
-                                            tiles[tiles.shape[0]-1][z] = np.copy(tmp)
-                                        side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
-                                                        + tiles[k][z][1]) % 4
-                                        rotates = ChosenSide(side).value - CompareSide(side_compare).value
-                                        if rotates < 0:
-                                            rotates += 4
-                                        tiles[i][j][1] = rotates
+                                            tiles = shift_up(tiles)
+                                            tmp = np.copy(tiles[i][j])
+                                            if k-1 >= 0:
+                                                tiles[i][j] = np.copy(tiles[k-1][z])
+                                                tiles[k-1][z] = np.copy(tmp)
+                                            else:
+                                                tiles[i][j] = np.copy(tiles[tiles.shape[0]-1][z])
+                                                tiles[tiles.shape[0]-1][z] = np.copy(tmp)
+                                            side_compare = (tile_matches[tile_match_index][1]["sides"][1].value
+                                                            + tiles[k][z][1]) % 4
+                                            rotates = ChosenSide(side).value - CompareSide(side_compare).value
+                                            if rotates < 0:
+                                                rotates += 4
+                                            tiles[i][j][1] = rotates
                                 while not((tile_matches[tile_match_index][0][0] in concat_tiles and
                                            tile_matches[tile_match_index][0][1] not in concat_tiles) or
                                           (tile_matches[tile_match_index][0][1] in concat_tiles and
                                            tile_matches[tile_match_index][0][0] not in concat_tiles)):
-                                    if len(concat_tiles) == 12:
+                                    if len(concat_tiles) == tiles_count:
                                         break
                                     if tile_match_index == len(tile_matches) - 1:
                                         tile_match_index = 0
